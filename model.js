@@ -68,7 +68,7 @@ exports.predictTestData = async (model) => {
     return [predictionData, labelData];
 };
 
-exports.predictSingleData = async(sentence, model) => {
+exports.predictSingleData = async (sentence, model) => {
     let featureArray = [];
     featureArray.push(sentence);
     console.log(featureArray);

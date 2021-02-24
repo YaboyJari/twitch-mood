@@ -51,7 +51,7 @@ const onMessageHandler = async (target, context, msg, self) => {
         let model = await tf.loadLayersModel('file://model/model.json');
         // const testData = await predictTestData(model);
         const translateData = await translateSentence(message);
-        predictSingleData(translateData.text, model);
+        await predictSingleData(translateData.text, model);
      } catch (err) {
        await startTraining();
      }
