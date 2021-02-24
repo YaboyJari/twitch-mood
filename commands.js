@@ -1,6 +1,5 @@
 const testCommand = (target, client) => {
     console.log(target, 'Test worked!')
-    // client.say(target, 'Test worked!');
 }
 
 const COMMAND_LIST = [{

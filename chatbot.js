@@ -17,14 +17,20 @@ const {
 } = require('./model');
 const config = require("./config");
 const User = require('./user-data.model');
+const { getDutchStreams } = require('./get-dutch-streamers');
 
 let client;
 let token;
 
 const translateSentence = async (sentence) => {
-    return await translate(sentence, {
-        to: 'en'
-    });
+    try {
+        return await translate(sentence, {
+            to: 'en'
+        });
+    } catch (err) {
+        console.log("couldn't translate: " + sentence);
+        return null;
+    }
 }
 
 const opts = {
@@ -33,7 +39,8 @@ const opts = {
         password: config.password,
     },
     channels: [
-        config.username,
+        'JayriVM',
+        'Talon_EXE'
     ]
 };
 
@@ -54,7 +61,6 @@ const parseToUserSchema = (twitchUser) => {
 
 const getOrInsertUser = async (twitchUser) => {
     let user;
-    console.log(twitchUser);
     user = await User.findOne({
         'twitchId': twitchUser.id
     });
@@ -63,17 +69,26 @@ const getOrInsertUser = async (twitchUser) => {
         user = new User(mappedUserData);
         user.save();
     }
-    console.log(user);
     return user;
 }
 
+const addChannelsToBot = async () => {
+    const streamers = JSON.parse(await getDutchStreams(token)).data;
+    streamers.forEach(streamer => {
+        console.log(streamer.user_name);
+        opts.channels.push(streamer.user_name);
+    });
+}
+
 const startChatListen = async () => {
+    token = await getToken();
+    token = JSON.parse(token).access_token;
+    await addChannelsToBot();
+    console.log(opts);
     client = new tmi.client(opts);
 
     client.on('message', onMessageHandler);
     client.on('connected', onConnectedHandler);
-    token = await getToken();
-    token = JSON.parse(token).access_token;
 
     client.connect();
 };
@@ -107,9 +122,16 @@ const addToUserData = async (user, predictionData, labelArray) => {
 };
 
 const onMessageHandler = async (target, context, msg, self) => {
-    if (self) {
+    if (self || msg.startsWith('!')) {
         return;
     }
+
+    const punctuationRegex = /[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]/g;
+    const numberRegex = /[0-9]/g;
+    const emojiRegex = /([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g
+    msg = msg.replace(punctuationRegex, '');
+    msg = msg.replace(emojiRegex, '');
+    msg = msg.replace(numberRegex, '');
 
     const userInfo = JSON.parse(await getUserInfo(context['user-id'], token)).data[0];
     const user = await getOrInsertUser(userInfo);
@@ -120,8 +142,12 @@ const onMessageHandler = async (target, context, msg, self) => {
     try {
         model = await tf.loadLayersModel('file://model/model.json');
         const translateData = await translateSentence(message);
-        const singleData = await predictSingleData(translateData.text, model);
-        await addToUserData(user, singleData[0], singleData[1]);
+        if (translateData) {
+            const singleData = await predictSingleData(translateData.text, model);
+            if (singleData) {
+                await addToUserData(user, singleData[0], singleData[1]);
+            }
+        };
     } catch (err) {
         console.log(err);
         if (!model) {

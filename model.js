@@ -92,8 +92,24 @@ exports.predictSingleData = async (sentence, model) => {
         featureArray,
         labelArray,
     }
-    const tensorData = await getTensorData(data);
-    const predictions = model.predict(tensorData.x_features, {batchSize: batchSize}).argMax(-1);
-    predictionData = castTensorToArray(predictions);
-    return [predictionData, labelArray];
+    let predictions;
+
+    try {
+        const tensorData = await getTensorData(data);
+        predictions = model.predict(tensorData.x_features, {batchSize: batchSize});
+        const biggestIndex = predictions.argMax(-1);
+        predictionData = castTensorToArray(predictions);
+        const biggestIndexArray = castTensorToArray(biggestIndex);
+        const biggestFactor = Math.round(Math.max.apply(Math, predictionData) * 100, 2);
+        if (biggestFactor >= 50) {
+            return [biggestIndexArray, labelArray];
+        } else {
+            console.log("prediction not convincing enough: " + biggestFactor + '%');
+            return null;
+        }
+    } catch (err) {
+        console.log("couldn't get prediction for: " + sentence);
+        return null;
+    }
+    
 };

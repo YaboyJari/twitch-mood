@@ -100,16 +100,23 @@ const setSparseToDenseTensor = (features, voc) => {
 
     const values = tf.tensor1d(valueArray, 'float32');
     const shape = [features.length, voc.length];
+    if (!indicesArray || !valueArray) {
+        return new Error('Fault with indices or values');
+    };
     return tf.sparseToDense(indicesArray, values, shape);
 };
 
 const transferToTensorData = (features, labels, voc) => {
     return tf.tidy(() => {
-        features = setSparseToDenseTensor(features, voc);
-        labels = tf.tensor(labels);
-        return {
-            'x_features': features,
-            'y_labels': labels,
+        try {
+            features = setSparseToDenseTensor(features, voc);
+            labels = tf.tensor(labels);
+            return {
+                'x_features': features,
+                'y_labels': labels,
+            };
+        } catch (err) {
+            return err;
         };
     });
 };
@@ -128,10 +135,14 @@ const mapLabelToCategory = (labels, uniqueLabels) => {
 };
 
 exports.getTensorData = async (data) => {
-    let features = data.featureArray;
-    const sortedUniqueVocabulary = await getEnglishWords('english_words.csv');
-    const uniqueLabels = getUniqueWordsArray(data.labelArray);
-    let labels = mapLabelToCategory(data.labelArray, uniqueLabels);
-    features = normalizeStringDataSet(features, sortedUniqueVocabulary);
-    return transferToTensorData(features, labels, sortedUniqueVocabulary);
+    try {
+        let features = data.featureArray;
+        const sortedUniqueVocabulary = await getEnglishWords('english_words.csv');
+        const uniqueLabels = getUniqueWordsArray(data.labelArray);
+        let labels = mapLabelToCategory(data.labelArray, uniqueLabels);
+        features = normalizeStringDataSet(features, sortedUniqueVocabulary);
+        return transferToTensorData(features, labels, sortedUniqueVocabulary);
+    } catch (err) {
+        return err;
+    }; 
 };
