@@ -1,12 +1,12 @@
 
 require('@tensorflow/tfjs-node');
 const express = require('express');
-const tf = require('@tensorflow/tfjs');
 const { startChatListen } = require('./chatbot');
-const { predictTestData } = require('./model');
+const { connect } = require('./mongoose-initializer');
 const PORT = 3000;
 
 (async () => {
+  await connect();
   console.log('Starting server...');
   const app = express();
   await app.listen(PORT);

@@ -95,5 +95,5 @@ exports.predictSingleData = async (sentence, model) => {
     const tensorData = await getTensorData(data);
     const predictions = model.predict(tensorData.x_features, {batchSize: batchSize}).argMax(-1);
     predictionData = castTensorToArray(predictions);
-    console.log(labelArray[predictionData]);
+    return [predictionData, labelArray];
 };
