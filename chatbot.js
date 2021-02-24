@@ -49,11 +49,12 @@ const onMessageHandler = async (target, context, msg, self) => {
 
     try {
         let model = await tf.loadLayersModel('file://model/model.json');
-        // const testData = await predictTestData(model);
         const translateData = await translateSentence(message);
         await predictSingleData(translateData.text, model);
      } catch (err) {
        await startTraining();
+       let model = await tf.loadLayersModel('file://model/model.json');
+        await predictTestData(model);
      }
     
     // handleCommands(target, message, client);

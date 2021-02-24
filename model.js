@@ -58,6 +58,20 @@ exports.startTraining = async () => {
     await myModel.save('file://model');
 };
 
+const getPercentArray = (predictions, labels) => {
+    const allPredicted = new Array(6).fill(0);
+    const rightPredicted = new Array(6).fill(0);
+    predictions.forEach((data, index) => {
+        allPredicted[data]++;
+        if (data === labels[index]) {
+            rightPredicted[data]++;
+        };
+    });
+    return allPredicted.map((item, index) => {
+        return {label: labelArray[index], percentage: Math.round((rightPredicted[index] / item) * 100, 2) + '%'};
+    });
+};
+
 exports.predictTestData = async (model) => {
     const data = await getData('test.csv');
     const tensorData = await getTensorData(data);
@@ -65,6 +79,8 @@ exports.predictTestData = async (model) => {
     const predictions = model.predict(tensorData.x_features, {batchSize: batchSize}).argMax(-1);
     labelData = castTensorToArray(testLabels);
     predictionData = castTensorToArray(predictions);
+    const percentArray = getPercentArray(predictionData, labelData);
+    console.log(percentArray);
     return [predictionData, labelData];
 };
 
