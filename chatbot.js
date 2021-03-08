@@ -40,7 +40,11 @@ const opts = {
     },
     channels: [
         'JayriVM',
-        'Talon_EXE'
+        'Talon_EXE',
+        'The_CAG',
+        'Frapsel',
+        'MrSeeSharp',
+        'itsnoomie',
     ]
 };
 
@@ -83,7 +87,7 @@ const addChannelsToBot = async () => {
 const startChatListen = async () => {
     token = await getToken();
     token = JSON.parse(token).access_token;
-    await addChannelsToBot();
+    // await addChannelsToBot();
     console.log(opts);
     client = new tmi.client(opts);
 

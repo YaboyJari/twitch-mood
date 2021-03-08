@@ -66,7 +66,7 @@ const getValueAndIndexes = (arr) => {
         n !== 0 && r.push(i);
         return r;
     }, []);
-    var combinedArray = values.map(function (value, index) {
+    const combinedArray = values.map(function (value, index) {
         return [value, indexes[index]];
     });
     return combinedArray;
